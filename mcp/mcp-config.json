@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "neon-data-api": {
+      "command": "node",
+      "args": ["build/index.js"],
+      "cwd": "/path/to/neon-data-api/mcp",
+      "env": {}
+    }
+  }
+}

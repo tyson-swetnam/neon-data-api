@@ -1,0 +1,11 @@
+import { Product, Site, DataQueryResult, Location, TaxonomyEntry, Sample, Release } from '../api/types.js';
+export declare function formatProduct(product: Product): string;
+export declare function formatSite(site: Site): string;
+export declare function formatDataQueryResult(result: DataQueryResult): string;
+export declare function formatLocation(location: Location): string;
+export declare function formatTaxonomyEntries(entries: TaxonomyEntry[], total: number): string;
+export declare function formatSamples(samples: Sample[]): string;
+export declare function formatRelease(release: Release): string;
+export declare function formatFileSize(bytes: number): string;
+export declare function formatDownloadInfo(url: string, size: number, checksum: string): string;
+export declare function createDataSummary(result: DataQueryResult): string;
