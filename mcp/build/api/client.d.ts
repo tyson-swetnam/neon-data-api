@@ -11,6 +11,8 @@ export declare class NeonApiClient {
     getSites(release?: string): Promise<Site[]>;
     getSite(siteCode: string): Promise<Site>;
     queryData(params: DataQueryParams): Promise<DataQueryResult>;
+    private generateMonthRange;
+    private getDataForMonth;
     getSiteLocations(): Promise<Location[]>;
     getLocation(locationName: string, hierarchy?: boolean, history?: boolean, locationType?: string): Promise<Location>;
     getLocationHierarchy(locationName: string, locationType?: string): Promise<Location>;

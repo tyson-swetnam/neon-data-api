@@ -84,40 +84,114 @@ export class NeonApiClient {
     }
     // Data Query API methods
     async queryData(params) {
-        const endpoint = '/api/v0/data/query';
-        // Use POST for multiple sites, GET for single site
-        if (params.siteCodes && params.siteCodes.length > 1) {
-            // For POST requests, we can't use the standard caching mechanism
-            // as it's based on URL parameters
-            const cacheKey = ApiCache.generateKey(endpoint, params);
-            const cached = this.cache.get(cacheKey);
-            if (cached) {
-                return cached;
+        // Generate list of months in the date range
+        const months = this.generateMonthRange(params.startDateMonth, params.endDateMonth);
+        // Determine which sites to query
+        const sites = params.siteCodes || (params.siteCode ? [params.siteCode] : []);
+        if (sites.length === 0) {
+            throw new Error('Either siteCode or siteCodes must be provided');
+        }
+        const result = { siteCodes: [] };
+        // Query each site
+        for (const siteCode of sites) {
+            const siteData = {
+                siteCode,
+                availableMonths: []
+            };
+            // Query each month for this site
+            for (const month of months) {
+                try {
+                    const monthData = await this.getDataForMonth(params.productCode, siteCode, month, params.package, params.release, params.includeProvisional);
+                    if (monthData) {
+                        siteData.availableMonths.push(monthData);
+                    }
+                }
+                catch (error) {
+                    // Skip months with no data (404 errors)
+                    if (error instanceof Error && !error.message.includes('Status: 404')) {
+                        console.warn(`Error fetching data for ${siteCode}/${month}:`, error);
+                    }
+                }
             }
-            const response = await fetch(`${this.baseUrl}${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(params),
+            // Only include site if it has data
+            if (siteData.availableMonths.length > 0) {
+                result.siteCodes.push(siteData);
+            }
+        }
+        return result;
+    }
+    // Helper to generate month range
+    generateMonthRange(startMonth, endMonth) {
+        const months = [];
+        const [startYear, startMon] = startMonth.split('-').map(Number);
+        const [endYear, endMon] = endMonth.split('-').map(Number);
+        let year = startYear;
+        let month = startMon;
+        while (year < endYear || (year === endYear && month <= endMon)) {
+            months.push(`${year}-${month.toString().padStart(2, '0')}`);
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+        }
+        return months;
+    }
+    // Helper to get data for a specific month
+    async getDataForMonth(productCode, siteCode, yearMonth, packageType, release, includeProvisional) {
+        const endpoint = `/api/v0/data/${productCode}/${siteCode}/${yearMonth}`;
+        const params = {};
+        if (packageType)
+            params.package = packageType;
+        if (release)
+            params.release = release;
+        if (includeProvisional)
+            params.includeProvisional = includeProvisional;
+        const data = await this.makeRequest(endpoint, Object.keys(params).length > 0 ? params : undefined);
+        if (!data || (!data.files && !data.packages)) {
+            return null;
+        }
+        // Transform the response to match expected structure
+        const releaseName = data.release || release || 'PROVISIONAL';
+        // Group files by package type (basic/expanded)
+        const packages = [];
+        if (data.files && data.files.length > 0) {
+            // Files are returned directly - group by package type based on filename
+            const basicFiles = [];
+            const expandedFiles = [];
+            data.files.forEach(file => {
+                const dataFile = {
+                    name: file.name,
+                    size: file.size || 0,
+                    md5: file.md5 || '',
+                    crc32c: file.crc32c || '',
+                    url: file.url
+                };
+                // Check if file belongs to expanded package
+                if (file.name.includes('.expanded.') || file.name.includes('_expanded_')) {
+                    expandedFiles.push(dataFile);
+                }
+                else {
+                    basicFiles.push(dataFile);
+                }
             });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`NEON API Error: ${errorData.detail} (Status: ${errorData.status})`);
+            if (basicFiles.length > 0) {
+                packages.push({ package: 'basic', files: basicFiles });
             }
-            const data = await response.json();
-            this.cache.set(cacheKey, data.data);
-            return data.data;
-        }
-        else {
-            // Use GET for single site
-            const queryParams = { ...params };
-            if (params.siteCodes) {
-                queryParams.siteCode = params.siteCodes[0];
-                delete queryParams.siteCodes;
+            if (expandedFiles.length > 0) {
+                packages.push({ package: 'expanded', files: expandedFiles });
             }
-            return this.makeRequest(endpoint, queryParams, true, 30 * 60 * 1000); // 30 min cache
         }
+        if (packages.length === 0) {
+            return null;
+        }
+        return {
+            month: yearMonth,
+            availableDataUrls: [{
+                    release: releaseName,
+                    packages
+                }]
+        };
     }
     // Location API methods
     async getSiteLocations() {
