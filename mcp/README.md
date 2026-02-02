@@ -7,6 +7,9 @@ An MCP (Model Context Protocol) server that provides AI assistants with direct a
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+  - [macOS](#macos)
+  - [Windows](#windows)
+  - [Linux (Ubuntu/Debian)](#linux-ubuntudebian)
 - [Client Configuration](#client-configuration)
   - [Claude Code (CLI)](#claude-code-cli)
   - [Claude Desktop](#claude-desktop)
@@ -30,18 +33,70 @@ An MCP (Model Context Protocol) server that provides AI assistants with direct a
 ## Prerequisites
 
 - **Node.js 18+** (required)
-- **npm** or **yarn** package manager
+- **npm** (included with Node.js)
 - **Git** (for cloning the repository)
 
-Verify your Node.js version:
-
-```bash
-node --version  # Should output v18.0.0 or higher
-```
+---
 
 ## Installation
 
-### Option 1: Clone and Build (Recommended)
+Choose your operating system for platform-specific instructions:
+
+- [macOS](#macos)
+- [Windows](#windows)
+- [Linux (Ubuntu/Debian)](#linux-ubuntudebian)
+
+---
+
+### macOS
+
+#### 1. Install Node.js
+
+**Option A: Using Homebrew (Recommended)**
+
+```bash
+# Install Homebrew if not already installed
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Node.js
+brew install node@20
+
+# Add to PATH (if using node@20)
+echo 'export PATH="/opt/homebrew/opt/node@20/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Option B: Using the Official Installer**
+
+1. Download the macOS installer from [nodejs.org](https://nodejs.org/)
+2. Run the `.pkg` file and follow the installation wizard
+3. Restart your terminal
+
+**Option C: Using nvm (Node Version Manager)**
+
+```bash
+# Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart terminal or run:
+source ~/.zshrc
+
+# Install and use Node.js 20
+nvm install 20
+nvm use 20
+```
+
+#### 2. Install Git (if not already installed)
+
+```bash
+# Git comes with Xcode Command Line Tools
+xcode-select --install
+
+# Or install via Homebrew
+brew install git
+```
+
+#### 3. Clone and Build
 
 ```bash
 # Clone the repository
@@ -58,7 +113,237 @@ npm run build
 ls build/index.js
 ```
 
-### Option 2: Development Mode
+#### 4. Note Your Installation Path
+
+```bash
+# Get the absolute path (you'll need this for client configuration)
+pwd
+# Example output: /Users/yourname/neon-data-api/mcp
+```
+
+---
+
+### Windows
+
+#### 1. Install Node.js
+
+**Option A: Using the Official Installer (Recommended)**
+
+1. Download the Windows installer (`.msi`) from [nodejs.org](https://nodejs.org/)
+2. Run the installer and follow the wizard
+3. Ensure "Add to PATH" is checked during installation
+4. Restart your terminal (PowerShell or Command Prompt)
+
+**Option B: Using winget**
+
+```powershell
+# Open PowerShell as Administrator
+winget install OpenJS.NodeJS.LTS
+```
+
+**Option C: Using Chocolatey**
+
+```powershell
+# Install Chocolatey first if needed (run as Administrator)
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install Node.js
+choco install nodejs-lts
+```
+
+**Option D: Using nvm-windows**
+
+1. Download nvm-windows from [github.com/coreybutler/nvm-windows](https://github.com/coreybutler/nvm-windows/releases)
+2. Run the installer
+3. Open a new PowerShell window:
+
+```powershell
+nvm install 20
+nvm use 20
+```
+
+#### 2. Install Git
+
+**Option A: Using the Official Installer**
+
+1. Download from [git-scm.com](https://git-scm.com/download/win)
+2. Run the installer with default options
+3. Restart your terminal
+
+**Option B: Using winget**
+
+```powershell
+winget install Git.Git
+```
+
+#### 3. Verify Installation
+
+```powershell
+# Check Node.js version
+node --version
+# Should output: v18.0.0 or higher
+
+# Check npm version
+npm --version
+
+# Check Git version
+git --version
+```
+
+#### 4. Clone and Build
+
+**Using PowerShell:**
+
+```powershell
+# Clone the repository
+git clone https://github.com/NEONScience/neon-data-api.git
+cd neon-data-api\mcp
+
+# Install dependencies
+npm install
+
+# Build the TypeScript code
+npm run build
+
+# Verify the build succeeded
+dir build\index.js
+```
+
+**Using Command Prompt:**
+
+```cmd
+git clone https://github.com/NEONScience/neon-data-api.git
+cd neon-data-api\mcp
+npm install
+npm run build
+dir build\index.js
+```
+
+#### 5. Note Your Installation Path
+
+```powershell
+# Get the absolute path (you'll need this for client configuration)
+(Get-Location).Path
+# Example output: C:\Users\yourname\neon-data-api\mcp
+```
+
+> **Windows Path Note**: When configuring MCP clients, use double backslashes (`\\`) or forward slashes (`/`) in JSON configuration files:
+> - `C:\\Users\\yourname\\neon-data-api\\mcp\\build\\index.js`
+> - `C:/Users/yourname/neon-data-api/mcp/build/index.js`
+
+---
+
+### Linux (Ubuntu/Debian)
+
+#### 1. Install Node.js
+
+**Option A: Using NodeSource Repository (Recommended)**
+
+```bash
+# Update package index
+sudo apt update
+
+# Install prerequisites
+sudo apt install -y ca-certificates curl gnupg
+
+# Add NodeSource GPG key
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+
+# Add Node.js 20.x repository
+NODE_MAJOR=20
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+
+# Install Node.js
+sudo apt update
+sudo apt install -y nodejs
+```
+
+**Option B: Using nvm (Node Version Manager)**
+
+```bash
+# Install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart terminal or run:
+source ~/.bashrc
+
+# Install and use Node.js 20
+nvm install 20
+nvm use 20
+```
+
+**Option C: Using Snap**
+
+```bash
+sudo snap install node --classic --channel=20
+```
+
+#### 2. Install Git
+
+```bash
+sudo apt update
+sudo apt install -y git
+```
+
+#### 3. Verify Installation
+
+```bash
+# Check Node.js version
+node --version
+# Should output: v18.0.0 or higher
+
+# Check npm version
+npm --version
+
+# Check Git version
+git --version
+```
+
+#### 4. Clone and Build
+
+```bash
+# Clone the repository
+git clone https://github.com/NEONScience/neon-data-api.git
+cd neon-data-api/mcp
+
+# Install dependencies
+npm install
+
+# Build the TypeScript code
+npm run build
+
+# Verify the build succeeded
+ls -la build/index.js
+```
+
+#### 5. Note Your Installation Path
+
+```bash
+# Get the absolute path (you'll need this for client configuration)
+pwd
+# Example output: /home/yourname/neon-data-api/mcp
+```
+
+#### Optional: Fix npm Permissions
+
+If you encounter permission errors with npm:
+
+```bash
+# Create npm global directory in home folder
+mkdir -p ~/.npm-global
+npm config set prefix '~/.npm-global'
+
+# Add to PATH
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+```
+
+---
+
+### Development Mode (All Platforms)
 
 For active development with auto-reload:
 
@@ -67,6 +352,30 @@ cd neon-data-api/mcp
 npm install
 npm run dev
 ```
+
+---
+
+### Quick Verification (All Platforms)
+
+After installation, verify everything works:
+
+```bash
+# Navigate to the mcp directory
+cd /path/to/neon-data-api/mcp
+
+# Run the server
+node build/index.js
+```
+
+You should see:
+
+```
+NEON MCP Server started successfully
+Available tools: 14
+Tools: neon_list_products, neon_get_product, neon_search_products, ...
+```
+
+Press `Ctrl+C` to stop the server.
 
 ## Client Configuration
 
@@ -274,34 +583,27 @@ For any MCP-compatible client, use this standard configuration:
 
 ## Verifying the Installation
 
-### Test the server directly
+### Test with MCP Inspector
 
-Run the server manually to verify it starts correctly:
+The MCP Inspector provides a web interface to explore and test tools interactively:
 
 ```bash
 cd /path/to/neon-data-api/mcp
-node build/index.js
-```
-
-You should see output like:
-
-```
-NEON MCP Server started successfully
-Available tools: 14
-Tools: neon_list_products, neon_get_product, neon_search_products, ...
-```
-
-Press `Ctrl+C` to stop the server.
-
-### Test with MCP Inspector (optional)
-
-If you have the MCP Inspector installed:
-
-```bash
 npx @modelcontextprotocol/inspector node build/index.js
 ```
 
-This opens a web interface to explore available tools and test them interactively.
+This opens a browser where you can:
+- View all 14 available tools
+- Test tool calls with sample parameters
+- Inspect response formats
+
+### Verify Client Connection
+
+After configuring your MCP client, verify the connection:
+
+1. **Claude Desktop / Claude Code**: Look for "neon-data-api" in the MCP servers list or try asking *"What NEON tools are available?"*
+2. **VS Code Extensions**: Check the extension's MCP status indicator
+3. **Check logs**: Most clients show server startup messages in their logs
 
 ---
 
